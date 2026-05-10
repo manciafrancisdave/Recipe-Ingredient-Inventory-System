@@ -1,0 +1,64 @@
+package com.recipeinventory.ui;
+
+import com.recipeinventory.service.ReportService;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+public class ReportsForm extends JPanel {
+    private final ReportService service = new ReportService();
+    private final JTextArea report = new JTextArea();
+
+    public ReportsForm() {
+        super(new BorderLayout(10, 10));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton generate = Ui.primaryButton("Generate Reports");
+        JButton pdf = new JButton("Export PDF");
+        JButton csv = new JButton("Export CSV");
+        top.add(generate);
+        top.add(pdf);
+        top.add(csv);
+        add(top, BorderLayout.NORTH);
+        report.setEditable(false);
+        add(new JScrollPane(report), BorderLayout.CENTER);
+        generate.addActionListener(e -> generate());
+        pdf.addActionListener(e -> exportPdf());
+        csv.addActionListener(e -> exportCsv());
+    }
+
+    private void generate() {
+        try {
+            report.setText(service.generateDashboardReport());
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+
+    private void exportPdf() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new java.io.File("recipe-report.pdf"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        try {
+            service.exportPdf(chooser.getSelectedFile());
+            Ui.info(this, "PDF exported.");
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+
+    private void exportCsv() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new java.io.File("recipe-report.csv"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        try {
+            service.exportCsv(chooser.getSelectedFile());
+            Ui.info(this, "CSV exported.");
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+}
