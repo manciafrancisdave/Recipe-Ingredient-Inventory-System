@@ -1,0 +1,89 @@
+package com.recipeinventory.ui;
+
+import com.recipeinventory.model.ShoppingList;
+import com.recipeinventory.model.ShoppingListItem;
+import com.recipeinventory.service.ShoppingListService;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class ShoppingListForm extends JPanel {
+    private final ShoppingListService service = new ShoppingListService();
+    private final JTable table = Ui.table();
+    private final JTable itemsTable = Ui.table();
+    private final JTextField search = new JTextField(18);
+
+    public ShoppingListForm() {
+        super(new BorderLayout(10, 10));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton refresh = new JButton("Search");
+        JButton view = new JButton("View Items");
+        JButton complete = Ui.primaryButton("Mark Complete");
+        top.add(new JLabel("Search"));
+        top.add(search);
+        top.add(refresh);
+        top.add(view);
+        top.add(complete);
+        add(top, BorderLayout.NORTH);
+        JPanel center = new JPanel(new java.awt.GridLayout(1, 2, 10, 10));
+        center.add(new JScrollPane(table));
+        center.add(new JScrollPane(itemsTable));
+        add(center, BorderLayout.CENTER);
+        refresh.addActionListener(e -> load());
+        view.addActionListener(e -> loadItems());
+        complete.addActionListener(e -> complete());
+        load();
+    }
+
+    private void load() {
+        try {
+            DefaultTableModel model = new DefaultTableModel(new Object[]{"ID", "User", "Date", "Status"}, 0);
+            for (ShoppingList list : service.getLists(search.getText())) {
+                model.addRow(new Object[]{list.getListId(), list.getUserId(), list.getCreatedDate(), list.getStatus()});
+            }
+            table.setModel(model);
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+
+    private void loadItems() {
+        Integer id = selectedListId();
+        if (id == null) return;
+        try {
+            DefaultTableModel model = new DefaultTableModel(new Object[]{"Item", "Ingredient", "Qty", "Purchased"}, 0);
+            for (ShoppingListItem item : service.getItems(id)) {
+                model.addRow(new Object[]{item.getItemId(), item.getIngredientName(), item.getQuantity(), item.isPurchased()});
+            }
+            itemsTable.setModel(model);
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+
+    private void complete() {
+        Integer id = selectedListId();
+        if (id == null) return;
+        try {
+            service.markComplete(id);
+            load();
+            loadItems();
+        } catch (Exception ex) {
+            Ui.error(this, ex);
+        }
+    }
+
+    private Integer selectedListId() {
+        if (table.getSelectedRow() < 0) {
+            Ui.info(this, "Select a shopping list.");
+            return null;
+        }
+        return Integer.parseInt(table.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()), 0).toString());
+    }
+}
