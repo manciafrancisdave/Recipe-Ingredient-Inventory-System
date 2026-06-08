@@ -1,10 +1,12 @@
 package com.recipeinventory.ui;
 
 import com.recipeinventory.dao.RatingDAO;
+import com.recipeinventory.dao.TagDAO;
 import com.recipeinventory.model.CookingStep;
 import com.recipeinventory.model.Recipe;
 import com.recipeinventory.model.RecipeIngredient;
 import com.recipeinventory.model.RecipeRating;
+import com.recipeinventory.model.Tag;
 import com.recipeinventory.service.RecipeService;
 import com.recipeinventory.util.SessionManager;
 import java.awt.BorderLayout;
@@ -22,6 +24,7 @@ public class RecipeDetailsForm extends JFrame {
     private final int recipeId;
     private final RecipeService recipeService = new RecipeService();
     private final RatingDAO ratingDAO = new RatingDAO();
+    private final TagDAO tagDAO = new TagDAO();
     private final JTextArea details = Ui.textArea();
 
     public RecipeDetailsForm(int recipeId) {
@@ -54,6 +57,11 @@ public class RecipeDetailsForm extends JFrame {
                 text.append("- ").append(item.getIngredientName()).append(": ").append(item.getQuantity()).append(" ").append(item.getUnit());
                 if (item.isOptional()) text.append(" optional");
                 text.append("\n");
+            }
+            java.util.List<Tag> tags = tagDAO.getByRecipe(recipeId);
+            if (!tags.isEmpty()) {
+                text.append("\nTags\n");
+                for (Tag t : tags) text.append("  [").append(t.getName()).append("]\n");
             }
             text.append("\nCooking Steps\n");
             java.util.List<CookingStep> steps = recipeService.getSteps(recipeId);

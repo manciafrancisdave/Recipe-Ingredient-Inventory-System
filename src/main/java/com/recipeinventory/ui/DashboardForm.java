@@ -33,6 +33,7 @@ public class DashboardForm extends JFrame {
         if (admin) {
             tabs.addTab("Users", new UserManagementForm());
             tabs.addTab("Reports", new ReportsForm());
+            tabs.addTab("Tags", new TagManagerForm());
         } else {
             tabs.addTab("Favorites", new FavoritesForm());
         }
